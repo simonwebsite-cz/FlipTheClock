@@ -1,0 +1,54 @@
+# Flutter/Dart
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/.pub-cache/
+app/.pub/
+app/build/
+app/**/generated_plugin*
+app/pubspec.lock
+
+# Windows
+app/windows/flutter/generated_plugin*
+*.pdb
+
+# Android
+app/android/.gradle/
+app/android/gradle-wrapper.jar
+app/android/local.properties
+app/android/**/gradle-wrapper.properties
+app/android/key.properties
+*.jks
+*.keystore
+
+# macOS / Xcode
+app/macos/Flutter/ephemeral/
+app/**/*.xcuserstate
+app/**/xcuserdata/
+app/**/DerivedData/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Release staging (build output, not source)
+windows/x64/*
+!windows/x64/.gitkeep
+windows/arm/*
+!windows/arm/.gitkeep
+android/*.apk
+android/*.aab
+apple/macos/*.app
+apple/macos/*.dmg
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local Claude Code tooling state
+.claude/
+
+# Scratch logs
+*.log
