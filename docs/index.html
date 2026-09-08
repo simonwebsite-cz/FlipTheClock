@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlipTheClock! — open-source flip clock screen saver</title>
+<meta name="description" content="A free, open-source flip-clock screen saver and fullscreen app for Windows, Android and macOS. No data collection, no network access, MIT licensed.">
+<link rel="icon" href="img/logo.jpg">
+
+<meta property="og:title" content="FlipTheClock!">
+<meta property="og:description" content="Open-source flip-clock screen saver for Windows, Android and macOS. Zero data collection.">
+<meta property="og:image" content="https://fliptheclock.tichysimon.cz/img/design.png">
+<meta property="og:url" content="https://fliptheclock.tichysimon.cz/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #000;
+    --card: #131313;
+    --card-top: #1a1a1a;
+    --fg: #fff;
+    --muted: #8a8a8a;
+    --line: #242424;
+    --accent: #fff;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+  }
+
+  a { color: inherit; }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- hero ---------- */
+
+  header {
+    padding: 64px 0 40px;
+    text-align: center;
+  }
+
+  /* The artwork is a square with a lot of black around it, so it needs
+     real size to read at all; on a black page it needs no frame. */
+  .logo {
+    width: 150px;
+    height: 150px;
+    display: block;
+    margin: -18px auto 4px;
+  }
+
+  h1 {
+    font-family: Anton, Impact, sans-serif;
+    font-weight: 400;
+    font-size: clamp(2.6rem, 8vw, 4.6rem);
+    letter-spacing: 0.01em;
+    margin: 0 0 12px;
+    line-height: 1;
+  }
+
+  .tagline {
+    color: var(--muted);
+    font-size: clamp(1rem, 2.4vw, 1.18rem);
+    margin: 0 auto 8px;
+    max-width: 30em;
+  }
+
+  /* ---------- live clock ---------- */
+
+  .clock {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    margin: 48px 0 12px;
+    flex-wrap: wrap;
+  }
+
+  .pair {
+    display: flex;
+    gap: 6px;
+    position: relative;
+  }
+
+  .digit {
+    position: relative;
+    width: 92px;
+    height: 128px;
+    border-radius: 12px;
+    background: var(--card);
+    font-family: Anton, Impact, sans-serif;
+    font-size: 92px;
+    line-height: 1;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Each half shows the same glyph, clipped to its own band, so the
+     digit reads as one face split across the hinge. */
+  .half {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 50%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+  }
+
+  .half span {
+    /* Anton sits high in its line box; nudge it so the glyph is optically
+       centred in the card rather than mathematically centred. */
+    line-height: 128px;
+    height: 128px;
+    display: block;
+  }
+
+  .half.top {
+    top: 0;
+    align-items: flex-start;
+    background: var(--card-top);
+    border-radius: 12px 12px 0 0;
+  }
+
+  .half.top span { margin-top: 0; }
+
+  .half.bottom {
+    bottom: 0;
+    align-items: flex-end;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .half.bottom span { margin-top: -128px; }
+
+  .hinge {
+    position: absolute;
+    top: calc(50% - 1px);
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #000;
+    z-index: 3;
+  }
+
+  /* The app tucks AM/PM inside the first card, where its digits are small
+     enough to leave a corner free. At web sizes the glyph fills the card
+     and the two collide, so it sits just above the hour pair instead. */
+  .ampm {
+    position: absolute;
+    top: -22px;
+    left: 3px;
+    font-family: Anton, Impact, sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    z-index: 4;
+  }
+
+  .clock-note {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.86rem;
+    margin: 0 0 56px;
+  }
+
+  /* ---------- downloads ---------- */
+
+  .downloads {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 0 0 18px;
+  }
+
+  .dl {
+    display: block;
+    padding: 20px 22px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    text-decoration: none;
+    background: #0b0b0b;
+    transition: border-color 0.15s, transform 0.15s, background 0.15s;
+  }
+
+  .dl:hover {
+    border-color: #454545;
+    background: #101010;
+    transform: translateY(-2px);
+  }
+
+  .dl .os {
+    font-family: Anton, Impact, sans-serif;
+    font-size: 1.35rem;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .dl .meta {
+    color: var(--muted);
+    font-size: 0.84rem;
+  }
+
+  .dl[data-suggested="true"] {
+    border-color: #5c5c5c;
+    background: #151515;
+  }
+
+  .dl[data-suggested="true"] .os::after {
+    content: "your system";
+    font-family: Inter, sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    margin-left: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #fff;
+    color: #000;
+  }
+
+  .fineprint {
+    color: var(--muted);
+    font-size: 0.84rem;
+    text-align: center;
+    margin: 0 0 72px;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+
+  h2 {
+    font-family: Anton, Impact, sans-serif;
+    font-weight: 400;
+    font-size: 1.9rem;
+    margin: 0 0 24px;
+    letter-spacing: 0.01em;
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 28px;
+  }
+
+  .feature h3 {
+    font-size: 1rem;
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+
+  .feature p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.94rem;
+  }
+
+  .shot {
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    display: block;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  th { color: var(--muted); font-weight: 600; }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86em;
+    background: #141414;
+    padding: 2px 6px;
+    border-radius: 5px;
+  }
+
+  .note {
+    border-left: 2px solid #333;
+    padding: 4px 0 4px 16px;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 40px 0 64px;
+    color: var(--muted);
+    font-size: 0.88rem;
+    text-align: center;
+  }
+
+  footer a { color: var(--fg); text-decoration: none; border-bottom: 1px solid #444; }
+  footer a:hover { border-color: #999; }
+
+  @media (max-width: 560px) {
+    .digit { width: 66px; height: 92px; font-size: 66px; }
+    .half span { line-height: 92px; height: 92px; }
+    .half.bottom span { margin-top: -92px; }
+    .clock { gap: 10px; row-gap: 30px; }
+    .logo { width: 118px; height: 118px; }
+    header { padding-top: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <img class="logo" src="img/logo.jpg" alt="FlipTheClock! logo">
+    <h1>FlipTheClock!</h1>
+    <p class="tagline">
+      A flip-clock screen saver and fullscreen clock for Windows, Android and macOS.
+      Free, open source, and it collects nothing.
+    </p>
+
+    <div class="clock" id="clock" aria-label="Live clock" role="img"></div>
+    <p class="clock-note">Not a picture — that is the clock, running in your browser.</p>
+
+    <div class="downloads" id="downloads">
+      <a class="dl" id="dl-win" href="https://github.com/simonwebsite-cz/FlipTheClock/releases/latest/download/FlipTheClock-windows-x64.zip">
+        <span class="os">Windows</span>
+        <span class="meta">Screen saver + installer &middot; .zip &middot; 64-bit</span>
+      </a>
+      <a class="dl" id="dl-android" href="https://github.com/simonwebsite-cz/FlipTheClock/releases/latest/download/FlipTheClock.apk">
+        <span class="os">Android</span>
+        <span class="meta">Signed .apk &middot; sideload</span>
+      </a>
+      <a class="dl" id="dl-mac" href="https://github.com/simonwebsite-cz/FlipTheClock/releases/latest/download/FlipTheClock-macos.zip">
+        <span class="os">macOS</span>
+        <span class="meta">Universal .app &middot; Intel + Apple Silicon</span>
+      </a>
+    </div>
+
+    <p class="fineprint">
+      Latest release &middot;
+      <a href="https://github.com/simonwebsite-cz/FlipTheClock/releases">all versions and release notes</a>
+    </p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>What it does</h2>
+    <div class="features">
+      <div class="feature">
+        <h3>A real Windows screen saver</h3>
+        <p>Not just a window that sits there. The included installer registers it the way Windows expects, so it starts on idle like any other screen saver.</p>
+      </div>
+      <div class="feature">
+        <h3>Collects nothing</h3>
+        <p>No analytics, no accounts, no telemetry, no network access at all. Your settings stay on your device. Nothing to opt out of.</p>
+      </div>
+      <div class="feature">
+        <h3>Keeps the screen awake</h3>
+        <p>On Android it holds a wake lock while open, so a phone on a charger works as a bedside clock instead of going dark.</p>
+      </div>
+      <div class="feature">
+        <h3>Adjustable</h3>
+        <p>12 or 24 hour, seconds on or off, date on or off, three colour themes, and sliders for digit size and weight.</p>
+      </div>
+      <div class="feature">
+        <h3>One codebase</h3>
+        <p>Built with Flutter, so all three platforms render identically instead of drifting apart.</p>
+      </div>
+      <div class="feature">
+        <h3>MIT licensed</h3>
+        <p>Read it, fork it, ship your own. The whole thing is on GitHub, including how the releases are built.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How it looks</h2>
+    <img class="shot" src="img/design.png" alt="FlipTheClock! showing hours and minutes in 24-hour format">
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Installing</h2>
+    <table>
+      <tr>
+        <th style="width:110px">Windows</th>
+        <td>
+          Extract the zip, right-click <code>Install.ps1</code> and choose <strong>Run with PowerShell</strong>. It copies the app
+          into <code>%LOCALAPPDATA%</code> and sets it as your screen saver &mdash; no administrator rights, and only your own
+          account is affected. <code>Uninstall.ps1</code> reverses it. Keep the folder together: the <code>.scr</code> needs the
+          files beside it.
+        </td>
+      </tr>
+      <tr>
+        <th>Android</th>
+        <td>
+          Install the <code>.apk</code> and allow installation from unknown sources when prompted. Sideloaded apps always
+          raise that warning &mdash; it is about where the file came from, not what is in it.
+        </td>
+      </tr>
+      <tr>
+        <th>macOS</th>
+        <td>
+          Unzip and drag the app into <code>/Applications</code>. It is not notarized by a paid Apple Developer account, so
+          Gatekeeper blocks the first launch. On macOS&nbsp;14 and earlier, right-click the app and choose <strong>Open</strong>.
+          On macOS&nbsp;15 and later, try to open it once, then go to <strong>System Settings &rarr; Privacy &amp; Security</strong>
+          and click <strong>Open Anyway</strong>. Once only.
+        </td>
+      </tr>
+    </table>
+
+    <p class="note" style="margin-top:28px">
+      There is no Windows 32-bit or native ARM64 build: Flutter ships no Windows ARM64 SDK, and Windows on ARM runs the
+      64-bit build under emulation anyway. iOS is not distributed, and Android's system screen-saver slot is not used
+      &mdash; the reasons for both are written up in the repository.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Privacy</h2>
+    <p style="color:var(--muted);max-width:60ch">
+      FlipTheClock! has no network permissions and makes no connections. It has no analytics, no crash reporting and no
+      accounts. Your settings are stored locally by your operating system and never leave the device. There is no server
+      to send anything to.
+    </p>
+    <p style="color:var(--muted)">
+      <a href="https://github.com/simonwebsite-cz/FlipTheClock/blob/main/legal/PRIVACY_POLICY.md">Full privacy policy</a>
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <a href="https://github.com/simonwebsite-cz/FlipTheClock">Source on GitHub</a> &middot;
+      <a href="https://github.com/simonwebsite-cz/FlipTheClock/blob/main/legal/LICENSE">MIT License</a> &middot;
+      <a href="https://github.com/simonwebsite-cz/FlipTheClock/issues">Report a problem</a>
+    </p>
+    <p>
+      Built by <a href="https://www.tichysimon.cz">Šimon Tichý</a>.
+      Not affiliated with, endorsed by, or connected to any other clock software.
+    </p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var clock = document.getElementById('clock');
+  if (!clock) return;
+
+  // Build: HH pair, MM pair, SS pair. Each digit is two clipped halves of
+  // the same glyph, which is what gives the split-flap look.
+  var groups = [];
+  ['hh', 'mm', 'ss'].forEach(function (key, index) {
+    var pair = document.createElement('div');
+    pair.className = 'pair';
+
+    if (index === 0) {
+      var badge = document.createElement('span');
+      badge.className = 'ampm';
+      badge.id = 'ampm';
+      pair.appendChild(badge);
+    }
+
+    var digits = [];
+    for (var i = 0; i < 2; i++) {
+      var d = document.createElement('div');
+      d.className = 'digit';
+      d.innerHTML =
+        '<div class="half top"><span>0</span></div>' +
+        '<div class="half bottom"><span>0</span></div>' +
+        '<div class="hinge"></div>';
+      pair.appendChild(d);
+      digits.push(d);
+    }
+
+    clock.appendChild(pair);
+    groups.push({ key: key, digits: digits });
+  });
+
+  function setDigit(el, value) {
+    var spans = el.querySelectorAll('span');
+    if (spans[0].textContent === value) return;
+    spans[0].textContent = value;
+    spans[1].textContent = value;
+    // Restart the flip: removing and re-adding the class forces reflow.
+    el.classList.remove('flip');
+    void el.offsetWidth;
+    el.classList.add('flip');
+  }
+
+  function tick() {
+    var now = new Date();
+    var h24 = now.getHours();
+    var h = h24 % 12;
+    if (h === 0) h = 12;
+
+    var values = {
+      hh: String(h).padStart(2, '0'),
+      mm: String(now.getMinutes()).padStart(2, '0'),
+      ss: String(now.getSeconds()).padStart(2, '0')
+    };
+
+    groups.forEach(function (g) {
+      var v = values[g.key];
+      setDigit(g.digits[0], v[0]);
+      setDigit(g.digits[1], v[1]);
+    });
+
+    var badge = document.getElementById('ampm');
+    if (badge) badge.textContent = h24 < 12 ? 'AM' : 'PM';
+  }
+
+  tick();
+  setInterval(tick, 250);
+
+  // Highlight the download that matches the visitor's platform. Purely a
+  // hint: every link stays visible and clickable regardless.
+  var ua = navigator.userAgent;
+  var pick = null;
+  if (/Android/i.test(ua)) pick = 'dl-android';
+  else if (/Mac OS X|Macintosh/i.test(ua) && !/iPhone|iPad/i.test(ua)) pick = 'dl-mac';
+  else if (/Windows/i.test(ua)) pick = 'dl-win';
+
+  if (pick) {
+    var el = document.getElementById(pick);
+    if (el) {
+      el.dataset.suggested = 'true';
+      el.parentNode.insertBefore(el, el.parentNode.firstChild);
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
