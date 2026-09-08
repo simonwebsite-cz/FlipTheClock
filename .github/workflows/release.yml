@@ -36,10 +36,15 @@ jobs:
           # wildcard source, Copy-Item -Recurse does not create the nested
           # destination folders and dies inside data/flutter_assets.
           Copy-Item -Path $release -Destination $stage -Recurse -Force
+          # Ship the same binary twice under both extensions. Which mode it
+          # starts in is decided by the arguments Windows passes, and the
+          # shell hands a .scr the /S (screen saver) verb on a double-click,
+          # so a plain .exe is the only way to offer the app on its own.
+          Copy-Item -Path "$stage/flip_the_clock.exe" -Destination "$stage/FlipTheClock.exe"
           Rename-Item -Path "$stage/flip_the_clock.exe" -NewName 'FlipTheClock.scr'
           Copy-Item -Path 'windows/installer/*' -Destination $stage
           Copy-Item -Path 'legal/LICENSE' -Destination $stage
-          foreach ($required in 'FlipTheClock.scr', 'flutter_windows.dll', 'data/icudtl.dat', 'data/app.so') {
+          foreach ($required in 'FlipTheClock.scr', 'FlipTheClock.exe', 'flutter_windows.dll', 'data/icudtl.dat', 'data/app.so') {
             if (-not (Test-Path "$stage/$required")) {
               throw "$required missing from the package; the screen saver would not start."
             }

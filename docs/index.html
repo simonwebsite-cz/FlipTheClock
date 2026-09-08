@@ -410,8 +410,9 @@
     <h2>What it does</h2>
     <div class="features">
       <div class="feature">
-        <h3>A real Windows screen saver</h3>
-        <p>Not just a window that sits there. The included installer registers it the way Windows expects, so it starts on idle like any other screen saver.</p>
+        <h3>An app and a screen saver</h3>
+        <p>Run <code>FlipTheClock.exe</code> for a fullscreen clock you can click around in, or let the <code>.scr</code> start
+        on idle like any other screen saver. Same program, same settings &mdash; only the way it is launched differs.</p>
       </div>
       <div class="feature">
         <h3>Collects nothing</h3>
@@ -451,10 +452,11 @@
       <tr>
         <th style="width:110px">Windows</th>
         <td>
-          Extract the zip, right-click <code>Install.ps1</code> and choose <strong>Run with PowerShell</strong>. It copies the app
-          into <code>%LOCALAPPDATA%</code> and sets it as your screen saver &mdash; no administrator rights, and only your own
-          account is affected. <code>Uninstall.ps1</code> reverses it. Keep the folder together: the <code>.scr</code> needs the
-          files beside it.
+          Extract the zip, right-click <code>Install.ps1</code> and choose <strong>Run with PowerShell</strong>. It copies
+          everything into <code>%LOCALAPPDATA%</code>, adds a Start menu entry and registers the screen saver &mdash; no
+          administrator rights, and only your own account is affected. <code>Uninstall.ps1</code> reverses it. Installing is
+          optional: <code>FlipTheClock.exe</code> runs straight from the extracted folder. Keep that folder together, though
+          &mdash; both executables need the files beside them.
         </td>
       </tr>
       <tr>

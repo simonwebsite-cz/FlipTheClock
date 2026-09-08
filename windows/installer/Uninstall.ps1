@@ -39,6 +39,12 @@ if ($current -and $current.StartsWith($destination, [StringComparison]::OrdinalI
     Write-Host "Screen saver is now '$current', not FlipTheClock! - leaving that setting alone."
 }
 
+$shortcut = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\FlipTheClock!.lnk'
+if (Test-Path $shortcut) {
+    Remove-Item -Path $shortcut -Force
+    Write-Host 'Start menu shortcut removed.'
+}
+
 if (Test-Path $destination) {
     Remove-Item -Path $destination -Recurse -Force
     Write-Host "Removed $destination"

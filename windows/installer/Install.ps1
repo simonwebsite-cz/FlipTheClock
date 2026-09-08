@@ -69,10 +69,38 @@ if (-not $timeout) {
     Write-Host 'Screen saver timeout was unset; defaulted to 5 minutes.'
 }
 
+# The app half of the install: a Start menu entry pointing at the plain
+# .exe, so FlipTheClock! can be launched and used like any other program
+# rather than only appearing when the machine goes idle.
+$startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
+$shortcut = Join-Path $startMenu 'FlipTheClock!.lnk'
+$exePath = Join-Path $destination 'FlipTheClock.exe'
+
+if (Test-Path $exePath) {
+    $shell = New-Object -ComObject WScript.Shell
+    $link = $shell.CreateShortcut($shortcut)
+    $link.TargetPath = $exePath
+    $link.WorkingDirectory = $destination
+    $link.Description = 'FlipTheClock! - fullscreen flip clock'
+    $link.Save()
+    Write-Host "Start menu shortcut created."
+} else {
+    Write-Host "FlipTheClock.exe not found; skipping the Start menu shortcut."
+}
+
 # Make the running session pick the change up without a sign-out.
 rundll32.exe user32.dll,UpdatePerUserSystemParameters 1, True
 
 Write-Host ''
-Write-Host 'Done. FlipTheClock! is now your screen saver.'
-Write-Host 'Check it under Settings -> Personalization -> Lock screen -> Screen saver.'
-Write-Host 'Run Uninstall.ps1 to remove it.'
+Write-Host 'Done. FlipTheClock! is installed two ways:'
+Write-Host ''
+Write-Host '  As an app         search the Start menu for FlipTheClock!, or run'
+Write-Host '                    FlipTheClock.exe. Fullscreen clock with a settings'
+Write-Host '                    button; clicking does not close it. Alt+F4 to quit.'
+Write-Host ''
+Write-Host '  As a screen saver starts on its own after the idle time set in'
+Write-Host '                    Settings -> Personalization -> Lock screen ->'
+Write-Host '                    Screen saver. Any key or mouse move ends it, and it'
+Write-Host '                    deliberately has no buttons of its own.'
+Write-Host ''
+Write-Host 'Run Uninstall.ps1 to remove both.'
