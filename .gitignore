@@ -52,3 +52,13 @@ Thumbs.db
 
 # Scratch logs
 *.log
+
+# Never commit key material or passwords, whatever they get named.
+# The .jks/.keystore rules above cover the keystore itself; these catch
+# the notes people leave beside it.
+*heslo*
+*password*
+*secret*
+*.jks
+*.keystore
+key.properties
