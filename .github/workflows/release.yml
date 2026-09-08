@@ -96,6 +96,11 @@ jobs:
   release:
     needs: [windows-x64, windows-arm64, android, macos]
     runs-on: ubuntu-latest
+    # New repositories default GITHUB_TOKEN to read-only, which makes
+    # creating a release fail with 403. Request the write scope explicitly
+    # on this job only, rather than relying on the account-wide default.
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
