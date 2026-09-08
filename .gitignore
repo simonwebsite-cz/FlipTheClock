@@ -60,3 +60,9 @@ Thumbs.db
 *.jks
 *.keystore
 key.properties
+
+# Nothing loose at the repository root gets committed by accident. Real
+# project files live in app/, legal/, .github/ and the staging folders;
+# a stray note at the top level is a scratch file, not source.
+/*.txt
+!/CMakeLists.txt
