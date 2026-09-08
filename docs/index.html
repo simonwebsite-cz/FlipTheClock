@@ -100,54 +100,84 @@
   }
 
   .digit {
+    --dh: 128px;
+    --dw: 92px;
     position: relative;
-    width: 92px;
-    height: 128px;
+    width: var(--dw);
+    height: var(--dh);
     border-radius: 12px;
-    background: var(--card);
     font-family: Anton, Impact, sans-serif;
-    font-size: 92px;
+    font-size: calc(var(--dh) * 0.72);
     line-height: 1;
-    overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    /* Gives the falling flap real depth instead of a flat squash. */
+    perspective: 420px;
   }
 
-  /* Each half shows the same glyph, clipped to its own band, so the
-     digit reads as one face split across the hinge. */
-  .half {
+  /* Every face carries the full glyph and clips it to its own band, so a
+     digit reads as one character split across the hinge. Positioning the
+     glyph absolutely (rather than with flex alignment) keeps the two
+     halves provably aligned at any size. */
+  .face {
     position: absolute;
     left: 0;
     right: 0;
     height: 50%;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
+    backface-visibility: hidden;
   }
 
-  .half span {
-    /* Anton sits high in its line box; nudge it so the glyph is optically
-       centred in the card rather than mathematically centred. */
-    line-height: 128px;
-    height: 128px;
-    display: block;
+  .face span {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--dh);
+    line-height: var(--dh);
+    text-align: center;
   }
 
-  .half.top {
+  .face.top {
     top: 0;
-    align-items: flex-start;
     background: var(--card-top);
     border-radius: 12px 12px 0 0;
+    transform-origin: 50% 100%;
   }
 
-  .half.top span { margin-top: 0; }
+  .face.top span { top: 0; }
 
-  .half.bottom {
+  .face.bottom {
     bottom: 0;
-    align-items: flex-end;
+    background: var(--card);
     border-radius: 0 0 12px 12px;
+    transform-origin: 50% 0;
   }
 
-  .half.bottom span { margin-top: -128px; }
+  .face.bottom span { bottom: 0; }
+
+  /* The two moving leaves sit above the static ones. Out of an animation
+     they are parked edge-on, so they are invisible until a digit changes. */
+  .leaf { z-index: 2; }
+  .leaf.top { transform: rotateX(0deg); opacity: 0; }
+  .leaf.bottom { transform: rotateX(90deg); }
+
+  .digit.flipping .leaf.top {
+    opacity: 1;
+    animation: leaf-fall 0.28s ease-in forwards;
+  }
+
+  .digit.flipping .leaf.bottom {
+    animation: leaf-land 0.28s ease-out 0.28s forwards;
+  }
+
+  @keyframes leaf-fall {
+    from { transform: rotateX(0deg);   }
+    to   { transform: rotateX(-90deg); }
+  }
+
+  @keyframes leaf-land {
+    from { transform: rotateX(90deg); }
+    to   { transform: rotateX(0deg);  }
+  }
 
   .hinge {
     position: absolute;
@@ -157,6 +187,14 @@
     height: 2px;
     background: #000;
     z-index: 3;
+  }
+
+  /* Respect a system-level request for less motion: the clock still keeps
+     time, it just stops throwing cards around. */
+  @media (prefers-reduced-motion: reduce) {
+    .digit.flipping .leaf.top,
+    .digit.flipping .leaf.bottom { animation: none; }
+    .leaf.top { opacity: 0; }
   }
 
   /* The app tucks AM/PM inside the first card, where its digits are small
@@ -322,9 +360,9 @@
   footer a:hover { border-color: #999; }
 
   @media (max-width: 560px) {
-    .digit { width: 66px; height: 92px; font-size: 66px; }
-    .half span { line-height: 92px; height: 92px; }
-    .half.bottom span { margin-top: -92px; }
+    /* Every glyph measurement derives from these two, so resizing a digit
+       is a two-line change rather than four that can drift apart. */
+    .digit { --dh: 92px; --dw: 66px; }
     .clock { gap: 10px; row-gap: 30px; }
     .logo { width: 118px; height: 118px; }
     header { padding-top: 40px; }
@@ -496,9 +534,13 @@
     for (var i = 0; i < 2; i++) {
       var d = document.createElement('div');
       d.className = 'digit';
+      // Four stacked faces. The static pair is what you see at rest; the
+      // two leaves only matter while a digit is changing.
       d.innerHTML =
-        '<div class="half top"><span>0</span></div>' +
-        '<div class="half bottom"><span>0</span></div>' +
+        '<div class="face top    static"><span>0</span></div>' +
+        '<div class="face bottom static"><span>0</span></div>' +
+        '<div class="face top    leaf"><span>0</span></div>' +
+        '<div class="face bottom leaf"><span>0</span></div>' +
         '<div class="hinge"></div>';
       pair.appendChild(d);
       digits.push(d);
@@ -508,15 +550,58 @@
     groups.push({ key: key, digits: digits });
   });
 
+  // One flip, in the order a real split-flap board does it:
+  //   1. the static top is switched to the new glyph straight away, but
+  //      stays hidden behind the top leaf, which still shows the old one;
+  //   2. that leaf falls forward, uncovering the new top half;
+  //   3. the bottom leaf, carrying the new glyph, swings up over the
+  //      static bottom, which is still showing the old one;
+  //   4. once it lands, the static bottom is switched and the leaves are
+  //      parked again, ready for the next change.
+  var booted = false;
+
   function setDigit(el, value) {
-    var spans = el.querySelectorAll('span');
-    if (spans[0].textContent === value) return;
-    spans[0].textContent = value;
-    spans[1].textContent = value;
-    // Restart the flip: removing and re-adding the class forces reflow.
-    el.classList.remove('flip');
+    var staticTop = el.querySelector('.face.top.static span');
+    var staticBottom = el.querySelector('.face.bottom.static span');
+    var leafTop = el.querySelector('.face.top.leaf span');
+    var leafBottom = el.querySelector('.face.bottom.leaf span');
+
+    // First paint shows the real time straight away. Animating from a
+    // placeholder 0 would flip only the digits that happen not to be 0,
+    // which reads as a glitch rather than an intro.
+    if (!booted) {
+      staticTop.textContent = value;
+      staticBottom.textContent = value;
+      leafTop.textContent = value;
+      leafBottom.textContent = value;
+      el._target = value;
+      return;
+    }
+
+    // Compare against the value being flipped *to*, not against what the
+    // bottom face currently shows: that one lags by the length of the
+    // animation, so every tick in between would see a stale digit and
+    // restart the flip, leaving it permanently mid-air.
+    if (el._target === value) return;
+
+    var previous = el._target;
+    el._target = value;
+
+    leafTop.textContent = previous;
+    leafBottom.textContent = value;
+    staticTop.textContent = value;
+
+    // Removing the class and forcing a reflow restarts the animation even
+    // when a digit changes again before the last flip has finished.
+    el.classList.remove('flipping');
     void el.offsetWidth;
-    el.classList.add('flip');
+    el.classList.add('flipping');
+
+    window.clearTimeout(el._settle);
+    el._settle = window.setTimeout(function () {
+      staticBottom.textContent = value;
+      el.classList.remove('flipping');
+    }, 560);
   }
 
   function tick() {
@@ -542,7 +627,8 @@
   }
 
   tick();
-  setInterval(tick, 250);
+  booted = true;
+  setInterval(tick, 200);
 
   // Highlight the download that matches the visitor's platform. Purely a
   // hint: every link stays visible and clickable regardless.
