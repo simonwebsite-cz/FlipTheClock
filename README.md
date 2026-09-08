@@ -2,6 +2,8 @@
 
 An open-source flip-clock screensaver and app for Windows, Android, and macOS. Not affiliated with Fliqlo — see [legal/TRADEMARK_NOTICE.md](legal/TRADEMARK_NOTICE.md).
 
+**Website: [tichysimon.cz/FlipTheClock](https://www.tichysimon.cz/FlipTheClock/)** — downloads for every platform, with a live flip clock on the page.
+
 100% offline. No accounts, no analytics, no ads, no network permission. See [legal/PRIVACY_POLICY.md](legal/PRIVACY_POLICY.md).
 
 ## Platforms
@@ -30,7 +32,7 @@ legal/          License, privacy policy, trademark notice
 
 ## Installing
 
-Download the latest release for your platform from [GitHub Releases](../../releases).
+Download the latest release for your platform from the [website](https://www.tichysimon.cz/FlipTheClock/) or from [GitHub Releases](../../releases).
 
 - **Windows**: extract `FlipTheClock-windows-x64.zip`, then right-click `Install.ps1` → **Run with PowerShell**. It copies everything to `%LOCALAPPDATA%\FlipTheClock`, adds a Start menu entry for the app and registers the screen saver — no administrator rights, and only your own account is affected. `Uninstall.ps1` reverses it. Installing is optional: `FlipTheClock.exe` runs straight from the extracted folder. Keep that folder together — a Flutter app is not a single binary, so both executables need the DLLs and `data\` beside them.
 - **Android**: install the `.apk` (enable "install from unknown sources" if prompted). The app keeps the screen on while open, so it can sit on a charger as a bedside clock.
