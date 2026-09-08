@@ -1,14 +1,12 @@
 // Application-level settings for the Runner target.
-//
-// This may be replaced with something auto-generated from metadata (e.g., pubspec.yaml) in the
-// future. If not, the values below would default to using the project name when this becomes a
-// 'flutter create' template.
 
-// The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = flip_the_clock
+// The bundle/executable name. Kept free of punctuation so the on-disk
+// bundle is FlipTheClock.app; the user-visible name (with the "!") comes
+// from CFBundleDisplayName in Info.plist.
+PRODUCT_NAME = FlipTheClock
 
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = cz.tichysimon.flipTheClock
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 cz.tichysimon. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright (c) 2026 Simon Tichy. Released under the MIT License.

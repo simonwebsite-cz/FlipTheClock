@@ -35,7 +35,7 @@ Download the latest release for your platform from [GitHub Releases](../../relea
 
 - **Windows**: run the installer, then set it as your screensaver in Settings → Lock screen → Screen saver settings.
 - **Android**: install the `.apk` (enable "install from unknown sources" if prompted). The app keeps the screen on while open, so it can sit on a charger as a bedside clock.
-- **macOS**: open the `.app`. Since it isn't notarized by an Apple Developer account, Gatekeeper will warn "unidentified developer" on first launch — right-click the app and choose **Open** to proceed past that warning once.
+- **macOS**: unzip and drag `FlipTheClock.app` into `/Applications`. The build is not signed with an Apple Developer ID and is not notarized, so Gatekeeper blocks it on first launch. On macOS 14 and earlier, right-click the app and choose **Open**. On macOS 15 (Sequoia) and later that shortcut was removed — try to open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway** next to the blocked-app message. You only need to do this once.
 
 ## Building from source
 

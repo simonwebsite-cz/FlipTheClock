@@ -29,16 +29,26 @@ Future<void> _applyKeepScreenOn(bool enabled) async {
   }
 }
 
-/// Sizes and positions the window to exactly cover the primary display and
-/// hides its title bar.
+/// Presents the clock full-screen with no window chrome.
 ///
-/// This deliberately does NOT use `windowManager.setFullScreen(true)`: on
-/// Windows that toggles the OS-level fullscreen state without reliably
-/// triggering a Flutter relayout, leaving `MediaQuery` reporting a stale
-/// size and the clock rendering off-center against the real (now larger)
-/// window. Explicitly setting bounds to the real display size goes through
-/// the normal resize path instead, which the engine does handle correctly.
+/// The two desktop platforms need genuinely different approaches:
+///
+/// * macOS/Linux use the real OS fullscreen state. On macOS that is the
+///   only thing that gets the window out from under the menu bar and the
+///   Dock — a borderless window merely *sized* to the display still sits
+///   beneath both of them.
+/// * Windows deliberately does NOT use `setFullScreen(true)`: there it
+///   toggles the OS-level fullscreen state without reliably triggering a
+///   Flutter relayout, leaving `MediaQuery` reporting a stale size and the
+///   clock rendering off-center against the real (now larger) window.
+///   Explicitly setting bounds to the display size goes through the normal
+///   resize path instead, which the engine does handle correctly.
 Future<void> _makeFullscreenBorderless() async {
+  if (!Platform.isWindows) {
+    await windowManager.setFullScreen(true);
+    return;
+  }
+
   await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
   final display = await screenRetriever.getPrimaryDisplay();
   await windowManager.setBounds(
@@ -49,6 +59,14 @@ Future<void> _makeFullscreenBorderless() async {
   // display — the window needs to be above it in z-order, not just sized
   // to cover it.
   await windowManager.setAlwaysOnTop(true);
+}
+
+/// Windows-only z-order juggling (see [_makeFullscreenBorderless]). On
+/// macOS the window is in a real fullscreen Space, where forcing
+/// always-on-top fights the window server instead of helping.
+Future<void> _setAlwaysOnTopIfWindows(bool value) async {
+  if (!Platform.isWindows) return;
+  await windowManager.setAlwaysOnTop(value);
 }
 
 void main(List<String> args) async {
@@ -165,10 +183,10 @@ class _FullscreenRootState extends State<_FullscreenRoot> with WindowListener {
   // to whatever the user switches to — only sit above the taskbar while
   // actually focused, not permanently on top of every other window.
   @override
-  void onWindowFocus() => windowManager.setAlwaysOnTop(true);
+  void onWindowFocus() => _setAlwaysOnTopIfWindows(true);
 
   @override
-  void onWindowBlur() => windowManager.setAlwaysOnTop(false);
+  void onWindowBlur() => _setAlwaysOnTopIfWindows(false);
 
   void _exit() {
     if (widget.exitOnInput) exit(0);
@@ -242,10 +260,10 @@ class _StandaloneRootState extends State<_StandaloneRoot> with WindowListener {
   // Same as _FullscreenRoot: stay above the taskbar only while focused, so
   // Alt-Tab correctly switches to whatever else the user picks.
   @override
-  void onWindowFocus() => windowManager.setAlwaysOnTop(true);
+  void onWindowFocus() => _setAlwaysOnTopIfWindows(true);
 
   @override
-  void onWindowBlur() => windowManager.setAlwaysOnTop(false);
+  void onWindowBlur() => _setAlwaysOnTopIfWindows(false);
 
   void _openSettings() async {
     await Navigator.of(context).push(

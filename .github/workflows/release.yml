@@ -80,10 +80,14 @@ jobs:
         working-directory: app
       - run: flutter build macos --release
         working-directory: app
-      - run: |
+      - name: Package the .app
+        run: |
           mkdir -p apple/macos
-          ditto app/build/macos/Build/Products/Release/*.app apple/macos/FlipTheClock.app
-          cd apple/macos && zip -r FlipTheClock-macos.zip FlipTheClock.app
+          ditto app/build/macos/Build/Products/Release/FlipTheClock.app                 apple/macos/FlipTheClock.app
+          # `zip -r` dereferences the symlinks inside Contents/Frameworks,
+          # which both bloats the archive and invalidates the bundle. ditto's
+          # archive mode is Apple's supported way to zip an .app.
+          ditto -c -k --sequesterRsrc --keepParent                 apple/macos/FlipTheClock.app                 apple/macos/FlipTheClock-macos.zip
       - uses: actions/upload-artifact@v4
         with:
           name: macos
