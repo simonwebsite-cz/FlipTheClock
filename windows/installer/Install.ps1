@@ -20,6 +20,21 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Set-StrictMode turns a missing property into a terminating error, and a
+# registry value that has never been set is exactly that: absent, not
+# empty. Reading one has to be guarded rather than dotted into.
+function Get-RegistryValue {
+    param(
+        [Parameter(Mandatory)] [string] $Path,
+        [Parameter(Mandatory)] [string] $Name
+    )
+
+    $item = Get-ItemProperty -Path $Path -ErrorAction SilentlyContinue
+    if ($null -eq $item) { return $null }
+    if ($item.PSObject.Properties.Name -notcontains $Name) { return $null }
+    return $item.$Name
+}
+
 $source = $PSScriptRoot
 $scrName = 'FlipTheClock.scr'
 $destination = Join-Path $env:LOCALAPPDATA 'FlipTheClock'
@@ -48,7 +63,7 @@ Set-ItemProperty -Path $desktopKey -Name 'ScreenSaveActive' -Value '1'
 
 # Leave an existing timeout alone; only supply one if the user has never
 # set it, so we don't silently change how long their machine waits.
-$timeout = (Get-ItemProperty -Path $desktopKey -Name 'ScreenSaveTimeOut' -ErrorAction SilentlyContinue).'ScreenSaveTimeOut'
+$timeout = Get-RegistryValue -Path $desktopKey -Name 'ScreenSaveTimeOut'
 if (-not $timeout) {
     Set-ItemProperty -Path $desktopKey -Name 'ScreenSaveTimeOut' -Value '300'
     Write-Host 'Screen saver timeout was unset; defaulted to 5 minutes.'

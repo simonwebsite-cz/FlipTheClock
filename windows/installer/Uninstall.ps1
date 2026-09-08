@@ -9,13 +9,28 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Set-StrictMode turns a missing property into a terminating error, and a
+# registry value that has never been set is exactly that: absent, not
+# empty. Reading one has to be guarded rather than dotted into.
+function Get-RegistryValue {
+    param(
+        [Parameter(Mandatory)] [string] $Path,
+        [Parameter(Mandatory)] [string] $Name
+    )
+
+    $item = Get-ItemProperty -Path $Path -ErrorAction SilentlyContinue
+    if ($null -eq $item) { return $null }
+    if ($item.PSObject.Properties.Name -notcontains $Name) { return $null }
+    return $item.$Name
+}
+
 $destination = Join-Path $env:LOCALAPPDATA 'FlipTheClock'
 $desktopKey = 'HKCU:\Control Panel\Desktop'
 
 # Only clear the setting if it still points at us: the user may have
 # picked a different screen saver since installing, and clobbering that
 # choice would be rude.
-$current = (Get-ItemProperty -Path $desktopKey -Name 'SCRNSAVE.EXE' -ErrorAction SilentlyContinue).'SCRNSAVE.EXE'
+$current = Get-RegistryValue -Path $desktopKey -Name 'SCRNSAVE.EXE'
 if ($current -and $current.StartsWith($destination, [StringComparison]::OrdinalIgnoreCase)) {
     Remove-ItemProperty -Path $desktopKey -Name 'SCRNSAVE.EXE'
     Set-ItemProperty -Path $desktopKey -Name 'ScreenSaveActive' -Value '0'
