@@ -363,7 +363,17 @@
     /* Every glyph measurement derives from these two, so resizing a digit
        is a two-line change rather than four that can drift apart. */
     .digit { --dh: 92px; --dw: 66px; }
-    .clock { gap: 10px; row-gap: 30px; }
+
+    /* Stack the pairs, the way the app itself lays out in portrait.
+       Letting them wrap instead put hours and minutes on one line and
+       seconds alone underneath, which reads as a broken row rather than
+       a deliberate arrangement. */
+    .clock {
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 56px;
+    }
+
     .logo { width: 118px; height: 118px; }
     header { padding-top: 40px; }
   }
