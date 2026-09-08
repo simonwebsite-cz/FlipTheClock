@@ -84,7 +84,7 @@ rebuilds them from repository secrets (Settings -> Secrets and variables
 Encode the keystore with PowerShell:
 
 ```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\path	oliptheclock-release.jks")) | Set-Clipboard
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\path\to\fliptheclock-release.jks")) | Set-Clipboard
 ```
 
 or on macOS/Linux:
