@@ -8,11 +8,11 @@ An open-source flip-clock screensaver and app for Windows, Android, and macOS. N
 
 | Platform | Form | Architectures |
 |---|---|---|
-| Windows | Real `.scr` screensaver | x64, ARM64 |
+| Windows | Real `.scr` screensaver | x64 (also runs on ARM64 via emulation) |
 | Android | Fullscreen app; keeps the screen awake so it works as a bedside/charging clock | universal |
 | macOS | Fullscreen app | universal |
 
-**Windows x86 (32-bit) is not supported.** Flutter's Windows target only builds for x64 and ARM64, and 32-bit-only PCs are effectively extinct — there is no x86 build.
+**One Windows build covers every PC.** Flutter ships no Windows ARM64 SDK — every entry in its `releases_windows.json` is `dart_sdk_arch: x64` — so a native ARM64 binary cannot be produced. Windows on ARM runs the x64 build under emulation, which is how this app was developed and tested. There is no x86 (32-bit) build either: Flutter dropped that target, and 32-bit-only PCs are effectively extinct.
 
 **Android has no system screen saver entry.** A Daydream service was written but is not shipped — a Flutter view inside Android's `DreamService` proved unreliable on device. See [CONTRIBUTING.md](CONTRIBUTING.md) for details and how to retry it.
 
@@ -22,8 +22,7 @@ An open-source flip-clock screensaver and app for Windows, Android, and macOS. N
 
 ```
 app/            Flutter source (single project, all platforms)
-windows/x64/    Staged Windows x64 release artifacts
-windows/arm/    Staged Windows ARM64 release artifacts
+windows/x64/    Staged Windows release artifact (x64; runs on ARM64 too)
 android/        Staged Android release artifact
 apple/macos/    Staged macOS release artifact
 legal/          License, privacy policy, trademark notice

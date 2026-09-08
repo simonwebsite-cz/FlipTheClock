@@ -26,19 +26,22 @@ flutter run -d windows   # or: -d macos / -d <android-device-id>
 
 ## Building a release
 
-`flutter build windows` always targets the machine's own architecture —
-there is no flag to cross-compile x64 vs ARM64. Run it from a real x64
-Windows machine for the x64 build, and from a real ARM64 Windows machine
-for the ARM64 build.
+`flutter build windows` always targets the machine's own architecture and
+has no cross-compilation flag. In practice that only ever means x64:
+Flutter publishes no Windows arm64 SDK, so even on an ARM64 host the
+toolchain runs emulated and emits an x64 PE. Windows on ARM then runs
+that binary under emulation, so one build serves every PC. (A
+`windows-11-arm` CI job was tried and fails at SDK setup for exactly this
+reason.)
 
 ```bash
 cd app
-flutter build windows --release   # produces x64 or arm64 depending on the host
+flutter build windows --release   # always x64, on any host
 flutter build apk --release
 flutter build macos --release
 ```
 
-Release artifacts are staged into the top-level `windows/x64/`, `windows/arm/`, `android/`, and `apple/macos/` folders by the CI workflow (`.github/workflows/release.yml`) on tag push, which runs the Windows builds on separate x64 and ARM64 runners — you don't need to do this by hand for a PR.
+Release artifacts are staged into the top-level `windows/x64/`, `android/`, and `apple/macos/` folders by the CI workflow (`.github/workflows/release.yml`) on tag push — you don't need to do this by hand for a PR.
 
 ### Android release signing
 

@@ -6,6 +6,10 @@ on:
       - "v*"
 
 jobs:
+  # Flutter publishes no Windows arm64 SDK (every entry in
+  # releases_windows.json is dart_sdk_arch: x64), so a native ARM64 binary
+  # cannot be produced. Windows on ARM runs this x64 build under emulation,
+  # which is how it was developed and tested in the first place.
   windows-x64:
     runs-on: windows-latest
     steps:
@@ -24,28 +28,6 @@ jobs:
         with:
           name: windows-x64
           path: windows/x64/FlipTheClock.scr
-
-  windows-arm64:
-    # flutter build windows always targets the machine's own architecture —
-    # there is no --target-platform flag to cross-compile from x64. A real
-    # ARM64 Windows runner is required to produce an ARM64 binary.
-    runs-on: windows-11-arm
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-      - run: flutter config --enable-windows-desktop
-      - run: flutter pub get
-        working-directory: app
-      - run: flutter build windows --release
-        working-directory: app
-      - name: Rename exe to .scr
-        run: Copy-Item app\build\windows\arm64\runner\Release\*.exe windows\arm\FlipTheClock.scr
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-arm64
-          path: windows/arm/FlipTheClock.scr
 
   android:
     runs-on: ubuntu-latest
@@ -131,7 +113,7 @@ jobs:
           path: apple/macos/FlipTheClock-macos.zip
 
   release:
-    needs: [windows-x64, windows-arm64, android, macos]
+    needs: [windows-x64, android, macos]
     runs-on: ubuntu-latest
     # New repositories default GITHUB_TOKEN to read-only, which makes
     # creating a release fail with 403. Request the write scope explicitly
@@ -147,6 +129,5 @@ jobs:
         with:
           files: |
             dist/windows-x64/FlipTheClock.scr
-            dist/windows-arm64/FlipTheClock.scr
             dist/android/FlipTheClock.apk
             dist/macos/FlipTheClock-macos.zip

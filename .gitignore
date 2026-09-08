@@ -36,8 +36,6 @@ app/**/DerivedData/
 # Release staging (build output, not source)
 windows/x64/*
 !windows/x64/.gitkeep
-windows/arm/*
-!windows/arm/.gitkeep
 android/*.apk
 android/*.aab
 apple/macos/*.app
