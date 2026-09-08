@@ -60,8 +60,45 @@ jobs:
           java-version: "17"
       - run: flutter pub get
         working-directory: app
+
+      # Without key.properties the Gradle config silently falls back to
+      # Flutter's debug key (see app/android/app/build.gradle.kts). That key
+      # is public, so a debug-signed APK must never be published: anyone
+      # could sign an "update" Android would accept as the same app.
+      - name: Restore the release keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not set. Refusing to build a release APK that would be signed with the public debug key. See CONTRIBUTING.md."
+            exit 1
+          fi
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          {
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyPassword=$KEY_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "storeFile=$RUNNER_TEMP/release.jks"
+          } > app/android/key.properties
+
       - run: flutter build apk --release
         working-directory: app
+
+      # Belt and braces: the fallback above is silent by design, so prove
+      # the artifact we are about to publish is not debug-signed.
+      - name: Verify the APK is not debug-signed
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs             app/build/app/outputs/flutter-apk/app-release.apk > certs.txt
+          cat certs.txt
+          if grep -qi "CN=Android Debug" certs.txt; then
+            echo "::error::APK is signed with the Android debug key. Refusing to publish."
+            exit 1
+          fi
+
       - run: cp app/build/app/outputs/flutter-apk/app-release.apk android/FlipTheClock.apk
       - uses: actions/upload-artifact@v4
         with:

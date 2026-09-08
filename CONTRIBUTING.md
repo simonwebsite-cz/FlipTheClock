@@ -68,6 +68,36 @@ storeFile=C:/path/to/fliptheclock-release.jks
 Back the keystore up — losing it means you can never ship an update to
 an already-installed copy of the app.
 
+#### Signing in CI
+
+`key.properties` and the `.jks` are gitignored, so the release workflow
+rebuilds them from repository secrets (Settings -> Secrets and variables
+-> Actions):
+
+| Secret | Value |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | the `.jks` file, base64-encoded |
+| `ANDROID_STORE_PASSWORD` | store password chosen at `keytool` time |
+| `ANDROID_KEY_PASSWORD` | key password chosen at `keytool` time |
+| `ANDROID_KEY_ALIAS` | `fliptheclock` |
+
+Encode the keystore with PowerShell:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\path	oliptheclock-release.jks")) | Set-Clipboard
+```
+
+or on macOS/Linux:
+
+```bash
+base64 -w0 fliptheclock-release.jks
+```
+
+If `ANDROID_KEYSTORE_BASE64` is missing the workflow fails on purpose
+rather than publishing a debug-signed APK, and a further `apksigner`
+check after the build rejects the artifact if the debug certificate
+ended up on it anyway.
+
 ### Android sideloading warnings
 
 Even correctly signed, an APK installed outside the Play Store triggers
