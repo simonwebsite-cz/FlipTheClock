@@ -22,12 +22,33 @@ jobs:
         working-directory: app
       - run: flutter build windows --release
         working-directory: app
-      - name: Rename exe to .scr
-        run: Copy-Item app\build\windows\x64\runner\Release\*.exe windows\x64\FlipTheClock.scr
+      # A Flutter app is not a single self-contained binary: the executable
+      # is ~150 KB and useless without flutter_windows.dll (~21 MB), the
+      # plugin DLLs and data\ beside it. Ship the whole payload, with the
+      # installer that registers it as the screen saver.
+      - name: Package the screen saver
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $release = 'app/build/windows/x64/runner/Release'
+          $stage = 'windows/x64/FlipTheClock'
+          # Copy the directory itself rather than "$release/*": with a
+          # wildcard source, Copy-Item -Recurse does not create the nested
+          # destination folders and dies inside data/flutter_assets.
+          Copy-Item -Path $release -Destination $stage -Recurse -Force
+          Rename-Item -Path "$stage/flip_the_clock.exe" -NewName 'FlipTheClock.scr'
+          Copy-Item -Path 'windows/installer/*' -Destination $stage
+          Copy-Item -Path 'legal/LICENSE' -Destination $stage
+          foreach ($required in 'FlipTheClock.scr', 'flutter_windows.dll', 'data/icudtl.dat', 'data/app.so') {
+            if (-not (Test-Path "$stage/$required")) {
+              throw "$required missing from the package; the screen saver would not start."
+            }
+          }
+          Compress-Archive -Path $stage -DestinationPath 'windows/x64/FlipTheClock-windows-x64.zip' -Force
       - uses: actions/upload-artifact@v4
         with:
           name: windows-x64
-          path: windows/x64/FlipTheClock.scr
+          path: windows/x64/FlipTheClock-windows-x64.zip
 
   android:
     runs-on: ubuntu-latest
@@ -128,6 +149,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/windows-x64/FlipTheClock.scr
+            dist/windows-x64/FlipTheClock-windows-x64.zip
             dist/android/FlipTheClock.apk
             dist/macos/FlipTheClock-macos.zip

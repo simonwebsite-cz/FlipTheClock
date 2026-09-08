@@ -32,7 +32,7 @@ legal/          License, privacy policy, trademark notice
 
 Download the latest release for your platform from [GitHub Releases](../../releases).
 
-- **Windows**: run the installer, then set it as your screensaver in Settings → Lock screen → Screen saver settings.
+- **Windows**: extract `FlipTheClock-windows-x64.zip`, then right-click `Install.ps1` → **Run with PowerShell**. It copies the app to `%LOCALAPPDATA%\FlipTheClock` and registers it as your screen saver — no administrator rights, and only your own account is affected. `Uninstall.ps1` reverses it. Keep the folder together: a Flutter app is not a single binary, so the `.scr` needs the DLLs and `data\` beside it. You can also double-click `FlipTheClock.scr` to run the clock as a normal fullscreen app.
 - **Android**: install the `.apk` (enable "install from unknown sources" if prompted). The app keeps the screen on while open, so it can sit on a charger as a bedside clock.
 - **macOS**: unzip and drag `FlipTheClock.app` into `/Applications`. The build is not signed with an Apple Developer ID and is not notarized, so Gatekeeper blocks it on first launch. On macOS 14 and earlier, right-click the app and choose **Open**. On macOS 15 (Sequoia) and later that shortcut was removed — try to open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway** next to the blocked-app message. You only need to do this once.
 
