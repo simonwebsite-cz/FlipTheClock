@@ -18,6 +18,8 @@ An open-source flip-clock screensaver and app for Windows, Android, and macOS. N
 
 **Android has no system screen saver entry.** A Daydream service was written but is not shipped — a Flutter view inside Android's `DreamService` proved unreliable on device. See [CONTRIBUTING.md](CONTRIBUTING.md) for details and how to retry it.
 
+**macOS has no screen saver, only the app.** A macOS screen saver is a `.saver` bundle: a plugin that the system loads into its own process and drives through a `ScreenSaverView` subclass. Flutter can only build standalone applications, not plugins, so the clock cannot be shipped in that form from this codebase. It would need a separate native implementation (Swift and Core Animation) of the same design. That is possible, but it has not been written, and it could not be tested without a Mac.
+
 **iOS/iPadOS is not distributed.** The source is Flutter-based and could be built for iOS, but without a paid Apple Developer account we cannot distribute an installable build outside the App Store, which is out of scope for this project. Feel free to build it yourself from `app/`.
 
 ## Repository layout
@@ -59,10 +61,9 @@ worth knowing before you go looking for the app in it:
 | **Install** | Only opens the screen saver settings dialog |
 | **Configure** | Opens FlipTheClock!'s settings (`/c`) |
 
-Launch `FlipTheClock.exe` when you want the app. On the other platforms
-the question does not arise: Android and macOS ship the app only, since
-neither offers a screen saver slot this can plug into (see
-[CONTRIBUTING.md](CONTRIBUTING.md) for the Android story).
+Launch `FlipTheClock.exe` when you want the app. Android and macOS ship
+the app only. Both systems do have screen savers, but neither can be
+filled by a Flutter build: see the notes on each platform above.
 
 ## Building from source
 
